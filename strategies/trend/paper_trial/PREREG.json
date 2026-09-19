@@ -1,0 +1,100 @@
+{
+  "frozen_at": "2026-09-19T12:37:55",
+  "start_date": "2026-09-19",
+  "rule": {
+    "gap": -0.03,
+    "entry": "same-day close",
+    "exit": "close +20 trading days",
+    "stop": "none",
+    "slots": {
+      "Mid": 5,
+      "Small": 10
+    },
+    "capital_per_book": 5000.0,
+    "cost_bps": {
+      "Mid": 20,
+      "Small": 35
+    },
+    "market_gap_day_share": 0.15,
+    "tbill": 0.035
+  },
+  "universe": {
+    "Mid": [
+      "FAF",
+      "IESC",
+      "CW",
+      "TLN",
+      "BAH",
+      "OVV",
+      "CPRI",
+      "TREX",
+      "POR",
+      "UNM",
+      "SITM",
+      "SHC",
+      "BKH",
+      "MUSA",
+      "AVNT",
+      "SUI",
+      "ESNT",
+      "CRBG",
+      "SARO",
+      "HLNE",
+      "ENS",
+      "TXRH",
+      "CSL",
+      "MUR",
+      "SMG"
+    ],
+    "Small": [
+      "CALX",
+      "MD",
+      "ZWS",
+      "PENG",
+      "INSW",
+      "EXTR",
+      "CNXC",
+      "VCEL",
+      "BMI",
+      "CRK",
+      "TFX",
+      "LTH",
+      "MMI",
+      "WEN",
+      "BTU",
+      "AUB",
+      "JBSS",
+      "POOL",
+      "CRSR",
+      "CRGY"
+    ]
+  },
+  "in_sample": {
+    "Mid": {
+      "n": 848,
+      "signal_ret_pct": 5.81,
+      "base_ret_pct": 1.65,
+      "excess_pct": 4.16,
+      "hac_t": 3.37,
+      "net_of_cost_pct": 5.61
+    },
+    "Small": {
+      "n": 802,
+      "signal_ret_pct": 4.45,
+      "base_ret_pct": 1.4,
+      "excess_pct": 3.05,
+      "hac_t": 2.92,
+      "net_of_cost_pct": 4.1
+    }
+  },
+  "gates": {
+    "kill": "N>=20 resolved and signal-base<0 -> investigate",
+    "go_live": "N>=200 per tier, HAC-t>=2 vs live base, same sign, excess>=0.5x in-sample excess",
+    "note": "~2-month review is plumbing only; no money before go_live gate"
+  },
+  "sha256": {
+    "_common.py": "86f358a14458d2606d3b8440e4cc6382698379475bcaf2ae852b861c4348382c",
+    "backtest_gap_reversion.py": "544024e415411322a8dd8c4de358c4538edfe7d7b6fae5346f239789c5799cd2",
+    "paper_trader.py": "443223b899cbcd2abff988b9bf15b637ea2b3128efb4e719dddb942f548f98ec"
+  }
+}

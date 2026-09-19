@@ -1,0 +1,12 @@
+__pycache__/
+.cache/
+cache/
+*.log
+graphify-out/
+Fortress/
+ProjectVayu/
+*.html
+*_results.json
+strategies/trend/paper_trial/*
+!strategies/trend/paper_trial/PREREG.json
+!strategies/trend/paper_trial/bars.csv
