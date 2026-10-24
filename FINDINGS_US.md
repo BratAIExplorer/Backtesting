@@ -832,3 +832,47 @@ model it).
   confirmatory sanity check, not validation. Not run, by request.
 - **Still unmodeled:** T-bill yield on idle cash; drawdowns of -55% or worse
   are the real risk at 5 slots.
+
+---
+
+## 15. DONE (partial coverage) — US S&P 1500 screen + sell-rule test, 2026-10-19
+
+`analysis/us_universe_scan.py` -> `analysis/us_scan_screen.csv`, `us_scan_rules.json`.
+Universe: S&P 500/400/600 (1,503 names). Rerun with slow retries 2026-10-19: 1,463 of 1,503 scored, 232 pass (Large 108, Mid 58, Small 66); ~40 unscored.
+Screen = Fortress verdict.ts fundamentals (growth/profit/debt/price/cash) >= +2 and 50>200 trend.
+Live screen only: today's fundamentals, not point-in-time, so not a backtest.
+
+Sell rules, buy every stock each quarter from 2021 (33,616 buys, prices only), mean / median return per buy:
+hold 56% / 22% - seat belt 20% 7% / -4% - sell +20% 13% / 21% - +10% 7% / 11% - +5% 4% / 6% - under 100DMA 1.5% / -0.8% - under 20DMA 0.3% / -0.8%.
+Same order as Deepak's India lots: hold wins, moving-average exits are worst.
+Caveats: survivorship (today's index members), 2021-26 bull market, buys are not annualised
+(early buys had longer to run), exited cash does not compound. Rule ranking is the signal, not the %.
+
+**India (Nifty 500, same rules, `.NS`):** 495 of 501 scored, 33 pass. 9,612 buys, mean / median:
+hold 62% / 11% - seat belt 17% / -2% - sell +20% 10% / 21% - +10% 6% / 11% - under 100DMA 5.6% / -0.3% - +5% 3% / 6% - under 20DMA 1.4% / -0.5%.
+Same top and bottom as the US. Page for both: `reports/US_India_Screen.html` (built by `analysis/build_scan_html.py`).
+
+**Other markets (19 Oct 2026, same rules):** Taiwan 50 (24 of 50 pass), JPX-Nikkei 400 (125 of 400), Europe large caps (46 of 195), Malaysia hand-picked 24 (1 pass). Hold first and 20-day exit last in every market. Korea, China not screened.
+Single page for all six: `reports/Global_Stock_Screen.html` (`analysis/build_scan_html.py`, stdlib only). Supersedes `US_India_Screen.html`.
+Env note: pandas/numpy in the user Python site-packages was broken on 2026-10-21 (numpy `_multiarray_umath` missing); the scan scripts need pandas, the page builder does not.
+Price column (2026-10-21): `build_scan_html.py` now fetches current prices for the listed stocks from Yahoo's chart endpoint (stdlib) and converts to USD and MYR (USDMYR 4.0815). Python on this machine was damaged (pip/numpy files missing), so yfinance cannot be used until it is repaired.
+Env fix (2026-10-21): global Python was damaged; scan scripts now run from `C:\Antigravity\Backtesting\.venv` (`.venv\Scripts\python -m analysis.us_universe_scan <US|IN|TW|JP|EU|MY>`). Malaysia list: 5336 (CKI, wrong company) replaced by 5286 (MI Technology). Full refresh of all six scans queued 21 Oct; counts above are the 19 Oct run until it finishes.
+
+## 18. DONE (snapshot 1 of N, NOT a backtest) — US CAN SLIM check, 2026-10-24
+
+`reports/canslim_us/canslim_yf.py` (yfinance, self-test passes). Input: 53 names from `analysis/us_scan_screen.csv`
+(above trend, mcap > $2B, sales growth >= 15%, ROE >= 15%, OCF > 0, NI > 0). Output frozen:
+`canslim_2026-10-24.csv/.md`. Rules at top of the script. Free data cannot backtest this; the list is a forward-tracking start.
+- **M gate: NO-GO.** SPY below 50-day, above 200-day, 7 distribution days in 25 (limit 5). FMP skill also said "choppy", M 40/100.
+- 6 of 6 letters: LLY only. 5 of 6: P, PLTR, MSFT, FTNT, MEDP. 12 of 53 are Energy (oil > $100, likely a price spike, not growth).
+- The `canslim-screener` skill (FMP) does not work on the free key: most symbols return 402 "premium". Paid Starter plan is ~$30/mo, Bharat's call.
+- Next snapshot 2026-11-01, then monthly. Grade each against SPY at 3 and 6 months. Do not edit a frozen list.
+- View: open `reports/canslim_us/canslim_2026-10-24.html` in any browser (gate banner + colour table). Script now writes the .html each run and refuses to overwrite a frozen snapshot.
+- Scheduled 2026-10-24: task `us-canslim-monthly-snapshot`, 1st of each month 09:00 local (runs only while the Claude app is open; otherwise on next launch). Refreshes the screen, snapshots, grades snapshots 90+ days old vs SPY into `reports/canslim_us/grading.csv`. First grade due 2027-01-22. Run with `.venv`, not system Python.
+- Monthly run 2026-10-24 (scheduled-task test): universe scan refreshed OK, selftest OK, snapshot already frozen today so not rewritten. Gate still NO-GO, top name LLY (6/6). Grading: too early, first grade due 2027-01-22.
+- **Six buckets (2026-10-24, Bharat's request):** US_large (over $2B, frozen v1, quality pre-filter), US_small ($500M-$2B), US_penny (price under $5, mcap over $30M, over $500K/day traded), IN_main (Nifty 500 over Rs 4,200 cr), IN_small (Rs 500-4,200 cr), IN_penny (price under Rs 30, mcap over Rs 100 cr, over Rs 50 lakh/day). Penny + small = the risky sleeve, kept separate. All except US_large use a price funnel (liquid, within 15% of 52w high, up 12m) before fundamentals, because Yahoo cash-flow/ROE is missing for many Indian names and the first quality pre-filter wrongly cut IN_main to 5 names. Funnel counts are printed on each page. Pages: `reports/canslim_us/index.html`. Code: `canslim_yf.py` + `canslim_universe.py`. Monthly task now runs all six.
+- Limits: India ROE falls back to net income / equity when Yahoo has none; Russell-only US names outside the S&P 1500 are not in US_small; ADRs, SPACs, units and warrants are excluded from US_penny.
+- **First six-bucket snapshot, 2026-10-24 (all gates NO-GO; India gate: Nifty 500 below 50d and 200d, 11 distribution days).** Floors applied: US_penny mcap over $50M / over $500K a day; IN_penny mcap over Rs 250 cr; IN_small and IN_penny over Rs 1 cr a day traded (raised from Rs 50 lakh after Bharat asked for separate floors).
+  Names with 5+/6: IN_main 10 (VIJAYA, RADICO, MCX at 6/6), IN_small 3 (SHANTIGOLD, UNITEDPOLY, SBC), US_large 6, US_small 0, US_penny 0, IN_penny 0.
+  Why so few in the small/penny buckets: only 6 of 53 US small caps near highs grew sales 20%+ (mostly banks and slow growers); 94% of US penny names have no usable earnings-growth number (loss-making). Data gaps do not explain it (sales growth missing for 0-5%).
+  Caveats: IN_small passes fail the I letter (institutions own little of tiny Indian names); PCJEWELLER sits in IN_penny at Rs 17,700 cr mcap because its price is low, not its size; penny bucket is price-defined. Still not a backtest.
